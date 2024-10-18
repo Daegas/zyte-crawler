@@ -10,41 +10,13 @@ class ExampleSpider(scrapy.Spider):
     start_urls = ['https://zzcvcpnfzoogpxiqupsergvrmdopqgrk-744852047878.us-south1.run.app/navigation']
     BASE_HOST = 'https://zzcvcpnfzoogpxiqupsergvrmdopqgrk-744852047878.us-south1.run.app/'
 
-    # pages
-    # start_urls = [
-    #     f"http://quotes.toscrape.com/api/quotes?page={n}" for n in range(1, 11)
-    # ]
-
-    def start_requests(self):
-        yield Request(
-            "https://zzcvcpnfzoogpxiqupsergvrmdopqgrk-744852047878.us-south1.run.app/navigation",
-            meta={
-                "zyte_api_automap": {
-                    "browserHtml": True,
-                    "actions": [
-                        {
-                            "action": "scrollBottom",
-                        },
-                    ],
-                    "networkCapture": [
-                        {
-                            "filterType": "url",
-                            "httpResponseBody": True,
-                            "value": "/api/",
-                            "matchType": "contains",
-                        },
-                    ],
-                },
-            },
-        )
-
 
     def parse(self, response):
-        # Extract the quotes from the page
-        urls = response.xpath('//a//@href')
+        # Extract the URLs from the page
+        urls = response.xpath('//a//@href').getall()  # Use .getall() to get all URLs as a list of strings
         for url in urls:
-            more_info_link = self.BASE_HOST.rstrip("/") + url.get()
-            yield response.follow(more_info_link, callback=self.get_more_info, meta={"url":url})
+            more_info_link = self.BASE_HOST.rstrip("/") + url  # Combine base URL with the relative link
+            yield response.follow(more_info_link, callback=self.get_more_info, meta={"url": more_info_link})
 
     def get_more_info(self, response):
         decoded_response = response.body.decode('utf-8')
